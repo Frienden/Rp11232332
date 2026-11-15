@@ -155,7 +155,8 @@ public final class VisionScanner {
                 int count=job.cache.totals.merge(block,1,Integer::sum);
                 ArrayList<Hit> hits=job.cache.hits.computeIfAbsent(block,k->new ArrayList<>());
                 Hit found=new Hit(blockPos.asLong(),block,0);
-                if(hits.size()<256 && job.cache.storedHits<1024){hits.add(found);job.cache.storedHits++;}
+                int limitPerType=Math.max(8,Math.min(256,1024/Math.max(1,selected.size())));
+                if(hits.size()<limitPerType){hits.add(found);job.cache.storedHits++;}
                 else if(!hits.isEmpty()){
                     // Reservoir sampling avoids retaining only the bottom of common-block veins.
                     int pick=(int)((blockPos.asLong()^(blockPos.asLong()>>>19))&0x7fffffffL)%count;
