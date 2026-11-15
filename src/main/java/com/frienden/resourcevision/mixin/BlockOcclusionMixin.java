@@ -19,6 +19,7 @@ public abstract class BlockOcclusionMixin {
     private static void resourcevision$uncull(BlockState state,BlockView world,BlockPos pos,
                                                Direction side,BlockPos otherPos,CallbackInfoReturnable<Boolean> cir){
         if(ResourceVisionClient.CONFIG!=null && ResourceVisionClient.CONFIG.xray &&
-           ResourceVisionClient.isSelected(state.getBlock()))cir.setReturnValue(true);
+           ResourceVisionClient.isSelected(state.getBlock()) &&
+           !ResourceVisionClient.isSelected(world.getBlockState(otherPos).getBlock()))cir.setReturnValue(true);
     }
 }
