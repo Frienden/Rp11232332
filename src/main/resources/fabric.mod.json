@@ -1,0 +1,13 @@
+{
+ "schemaVersion":1,
+ "id":"resourcevision",
+ "version":"1.0.0",
+ "name":"Resource Vision",
+ "description":"Client-side universal block scanner, ESP and selective X-Ray",
+ "authors":["Resource Vision"],
+ "license":"MIT",
+ "environment":"client",
+ "entrypoints":{"client":["com.frienden.resourcevision.ResourceVisionClient"]},
+ "mixins":["resourcevision.mixins.json"],
+ "depends":{"fabricloader":">=0.14.21","minecraft":"~1.20.1","java":">=17","fabric-api":"*"}
+}
