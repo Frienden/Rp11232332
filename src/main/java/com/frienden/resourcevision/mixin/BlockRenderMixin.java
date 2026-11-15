@@ -21,12 +21,12 @@ public abstract class BlockRenderMixin {
     private void resourcevision$hide(BlockState state,BlockPos pos,BlockRenderView world,
                                      MatrixStack matrices,VertexConsumer consumer,boolean cull,Random random,CallbackInfo ci){
         if(ResourceVisionClient.CONFIG!=null && ResourceVisionClient.CONFIG.xray &&
-           !ResourceVisionClient.CONFIG.isSelected(state.getBlock()))ci.cancel();
+           !ResourceVisionClient.isSelected(state.getBlock()))ci.cancel();
     }
     @Inject(method="renderFluid",at=@At("HEAD"),cancellable=true)
     private void resourcevision$hideFluid(BlockPos pos,BlockRenderView world,
                                           VertexConsumer consumer,BlockState state,FluidState fluid,CallbackInfo ci){
         if(ResourceVisionClient.CONFIG!=null && ResourceVisionClient.CONFIG.xray &&
-           !ResourceVisionClient.CONFIG.isSelected(state.getBlock()))ci.cancel();
+           !ResourceVisionClient.isSelected(state.getBlock()))ci.cancel();
     }
 }

@@ -16,7 +16,7 @@ public final class VisionHud {
         VisionConfig c=ResourceVisionClient.CONFIG;
         if(!c.hud||mc.player==null||mc.world==null||mc.options.hudHidden)return;
         ArrayList<String> lines=new ArrayList<>();
-        lines.add("RESOURCE VISION  |  "+(ResourceVisionClient.SCANNER.busy()?"SCANNING":"READY"));
+        lines.add("RESOURCE VISION  |  CLIENT DATA  |  "+(ResourceVisionClient.SCANNER.busy()?"SCANNING":"READY"));
         lines.add("R: "+c.radius+"  Y: +/-"+c.vertical+"  Chunks: "+
                   ResourceVisionClient.SCANNER.scannedChunks()+"  Pending: "+ResourceVisionClient.SCANNER.pendingChunks());
         lines.add("ESP "+(c.esp?"ON":"OFF")+"  Fill "+(c.filled?"ON":"OFF")+"  X-Ray "+(c.xray?"ON":"OFF"));

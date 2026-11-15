@@ -26,10 +26,7 @@ public final class VisionScanner {
         long lastScan=0;
         boolean finished;
         Cache(int x,int z){this.x=x;this.z=z;}
-        int stored(){
-            int n=0;for(var list:hits.values())n+=list.size();
-            return n;
-        }
+        int storedHits=0;
     }
     private static final class Job {
         final int x,z,low,high;
@@ -158,7 +155,7 @@ public final class VisionScanner {
                 int count=job.cache.totals.merge(block,1,Integer::sum);
                 ArrayList<Hit> hits=job.cache.hits.computeIfAbsent(block,k->new ArrayList<>());
                 Hit found=new Hit(blockPos.asLong(),block,0);
-                if(hits.size()<256 && job.cache.stored()<1024)hits.add(found);
+                if(hits.size()<256 && job.cache.storedHits<1024){hits.add(found);job.cache.storedHits++;}
                 else if(!hits.isEmpty()){
                     // Reservoir sampling avoids retaining only the bottom of common-block veins.
                     int pick=(int)((blockPos.asLong()^(blockPos.asLong()>>>19))&0x7fffffffL)%count;
@@ -183,7 +180,7 @@ public final class VisionScanner {
                 for(int i=0;i<list.size() && budget>0;i++){
                     Hit hit=list.get(i);
                     if(world.getBlockState(hit.position()).getBlock()!=hit.block){
-                        list.remove(i--);
+                        list.remove(i--);cache.storedHits=Math.max(0,cache.storedHits-1);
                         cache.totals.computeIfPresent(hit.block,(key,v)->Math.max(0,v-1));
                     }
                     budget--;
@@ -196,22 +193,28 @@ public final class VisionScanner {
         }
         verifyOffset=pos;
     }
+
     private void refreshVisible(MinecraftClient mc){
         if(mc.player==null)return;
         Vec3d p=mc.player.getPos();
         int max=ResourceVisionClient.CONFIG.maxRender;
-        PriorityQueue<Hit> nearest=new PriorityQueue<>(Comparator.comparingDouble(h->-h.distanceSq));
+        // Reserve a fair share of the render budget for every selected block.
+        // Common stone can no longer crowd all diamond or ancient-debris hits off screen.
+        int quota=Math.max(1,max/Math.max(1,selected.size()));
+        Map<Block,PriorityQueue<Hit>> perType=new HashMap<>();
         double maxSq=(double)scanRadius*scanRadius;
         for(Cache c:caches.values())for(var list:c.hits.values())for(Hit h:list){
             BlockPos pos=h.position();
             double d=pos.getSquaredDistance(p.x,p.y,p.z);
-            if(d>maxSq || !selected.containsKey(h.block))continue;
-            if(nearest.size()<max)nearest.add(new Hit(h.pos,h.block,d));
-            else if(d<nearest.peek().distanceSq){
-                nearest.poll();nearest.add(new Hit(h.pos,h.block,d));
-            }
+            if(d>maxSq||!selected.containsKey(h.block))continue;
+            PriorityQueue<Hit> heap=perType.computeIfAbsent(h.block,k->
+                new PriorityQueue<>(Comparator.comparingDouble(a->-a.distanceSq)));
+            if(heap.size()<quota)heap.add(new Hit(h.pos,h.block,d));
+            else if(d<heap.peek().distanceSq){heap.poll();heap.add(new Hit(h.pos,h.block,d));}
         }
-        visible.clear();visible.addAll(nearest);
+        visible.clear();
+        for(var list:perType.values())visible.addAll(list);
         visible.sort(Comparator.comparingDouble(h->h.distanceSq));
+        if(visible.size()>max)visible.subList(max,visible.size()).clear();
     }
 }

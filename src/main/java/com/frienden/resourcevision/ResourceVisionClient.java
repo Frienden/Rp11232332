@@ -22,10 +22,14 @@ import org.slf4j.LoggerFactory;
 public final class ResourceVisionClient implements ClientModInitializer {
     public static final Logger LOG=LoggerFactory.getLogger("ResourceVision");
     public static VisionConfig CONFIG;
+    private static volatile java.util.Set<Block> FAST_SELECTED=java.util.Set.of();
+    public static boolean isSelected(Block block){return FAST_SELECTED.contains(block);}
+    public static void refreshSelected(){FAST_SELECTED=java.util.Set.copyOf(CONFIG.resolved().keySet());}
     public static final VisionScanner SCANNER=new VisionScanner();
     private static KeyBinding menuKey,pickKey,hudKey;
     @Override public void onInitializeClient(){
         CONFIG=VisionConfig.load();
+        refreshSelected();
         menuKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.resourcevision.menu",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_RIGHT_SHIFT,"category.resourcevision"));
         pickKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.resourcevision.pick",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_G,"category.resourcevision"));
         hudKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.resourcevision.hud",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_H,"category.resourcevision"));
@@ -50,7 +54,7 @@ public final class ResourceVisionClient implements ClientModInitializer {
         LOG.info("Resource Vision initialized");
     }
     public static void changed(boolean terrain){
-        CONFIG.save();SCANNER.reset();
+        CONFIG.save();refreshSelected();SCANNER.reset();
         if(terrain&&CONFIG.xray)reloadTerrain();
     }
     public static void reloadTerrain(){
